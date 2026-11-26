@@ -1,23 +1,29 @@
 // The Houseplant Out-of-Office
-// Deterministically writes one out-of-office line to /output/entry.txt.
-// Node 22+, stdlib only, no network, no randomness, no secrets, no model calls.
+// Writes one out-of-office line, as if from a houseplant, to /output/entry.txt.
+// Node 22+, stdlib only: no network, no randomness, no secrets, no model calls.
+// The output is deterministic: the same line every run.
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-const LINE =
-  "Out of office: I am a fern. I have not been watered since March and honestly, neither of us is coming back from this.";
+const MAX_CHARS = 120;
 
-function main(): void {
-  if (LINE.length === 0 || LINE.trim().length === 0) {
+const LINE =
+  "Out of office: I am a fern. Not watered since March — honestly, neither of us is coming back from this.";
+
+function validate(line: string): void {
+  if (line.length === 0 || line.trim().length === 0) {
     throw new Error("entry line must not be empty");
   }
-  if (LINE.includes("\n") || LINE.includes("\r")) {
+  if (line.includes("\n") || line.includes("\r")) {
     throw new Error("entry line must be a single line");
   }
-  if (LINE.length > 120) {
-    throw new Error(`entry line is ${LINE.length} chars, over the 120 limit`);
+  if (line.length > MAX_CHARS) {
+    throw new Error(`entry line is ${line.length} chars, over the ${MAX_CHARS} limit`);
   }
+}
 
+function main(): void {
+  validate(LINE);
   const outDir = process.env.MAKEFUN_OUTPUT_DIR ?? "/output";
   mkdirSync(outDir, { recursive: true });
   writeFileSync(join(outDir, "entry.txt"), LINE, "utf8");
